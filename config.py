@@ -2,7 +2,7 @@
 This time is used to wait for the page to load.
 WARNING: if you set this time too low, the page may not load completely. And if you set this time too high, the program will run slowly and maybe there will be unexpected abnormal situations.
 """
-WAIT_TIME = 1
+WAIT_TIME = 3
 
 """
 This time is used to avoid being blocked by the website.

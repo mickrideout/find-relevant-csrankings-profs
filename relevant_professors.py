@@ -11,7 +11,7 @@ def check_relevant_professors_in_scholar(items=[], keywords=[], max_count=DEFAUL
     relevant_professors = []
     search_count = 0
     count = 0
-    driver = webdriver.Chrome()
+    driver = webdriver.Firefox()
 
     for prof_item in items:
         relevant_professor = {
@@ -37,11 +37,16 @@ def check_relevant_professors_in_scholar(items=[], keywords=[], max_count=DEFAUL
             # Record recent highlights: recent works containing keywords
             soup = BeautifulSoup(driver.page_source, "html.parser")
             titles = soup.find_all("a", class_="gsc_a_at")
-            for title in titles:
-                for keyword in keywords:
-                    if title.text.lower().count(keyword) > 0:
-                        prof_recent_highlights.append(clean_text(title.text))
-                        break
+            if keywords is not None:
+                for title in titles:
+                    for keyword in keywords:
+                        if title.text.lower().count(keyword) > 0:
+                            prof_recent_highlights.append(clean_text(title.text))
+                            break
+            else:
+                for title in titles:
+                    prof_recent_highlights.append(clean_text(title.text))
+
 
             # Sort by cite
             scholar_citation_url = scholar_url + "&view_op=list_works"
@@ -53,11 +58,7 @@ def check_relevant_professors_in_scholar(items=[], keywords=[], max_count=DEFAUL
             # Record domain relevance: works with high citation containing keywords
             soup = BeautifulSoup(driver.page_source, "html.parser")
             titles = soup.find_all("a", class_="gsc_a_at")
-            prof_relevance = sum(
-                title.text.lower().count(keyword)
-                for title in titles
-                for keyword in keywords
-            )
+            prof_relevance = 1
 
         relevant_professor.update(
             {
@@ -103,7 +104,6 @@ def parse_arguments():
     parser.add_argument(
         "--keywords",
         type=str,
-        required=True,
         help="Comma-separated list of relevant keywords in paper titles (e.g., \"adversarial, blockchain, LLM\")",
     )    
     parser.add_argument(
@@ -132,7 +132,10 @@ def parse_arguments():
     if args.max_search_count > DEFAULT_MAX_SEARCH_COUNT:
         args.max_search_count = DEFAULT_MAX_SEARCH_COUNT
 
-    keywords = [keyword.strip().lower() for keyword in args.keywords.replace("\"", "").split(",")]
+    if args.keywords is not None:
+        keywords = [keyword.strip().lower() for keyword in args.keywords.replace("\"", "").split(",")]
+    else:
+        keywords = None
     school_filter = (
         [school.strip() for school in args.schools.replace("\"", "").split(",")]
         if args.schools
@@ -161,6 +164,6 @@ if __name__ == "__main__":
         relevant_profs, key=lambda x: x["recent_highlights_num"], reverse=True
     )
 
-    save_filename = "relevant-profs-" + "-".join(keywords) + ".csv"
+    save_filename = "relevant-profs.csv"
     save_relevant_professors_to_csv(save_filename, relevant_profs_sorted)
     print(f"Relevant professors' information has been saved to {save_filename}")

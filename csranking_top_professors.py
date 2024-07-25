@@ -13,7 +13,7 @@ fields_dict = {
     "Computer vision": "vision",
     "Machine learning & data mining": "mlmining",
     "Natural language processing": "nlp",
-    "The Web & information retrieval": "ir",
+    "The Web & information retrieval": "inforet",
     "Computer architecture": "arch",
     "Computer networks": "comm",
     "Computer security": "sec",
@@ -79,13 +79,13 @@ def parse_professor_info(prof_tr):
 
 
 def fetch_universities(url):
-    driver = webdriver.Chrome()
+    driver = webdriver.Firefox()
     driver.get(url)
     time.sleep(
         WAIT_TIME
     )  # Adjust this sleep time to avoid special situations according to your network speed.
     soup = BeautifulSoup(driver.page_source, "html.parser")
-    driver.quit()
+
 
     universities = []
     table = soup.find("table", id="ranking")
@@ -100,6 +100,8 @@ def fetch_universities(url):
             # Parse professors
             university_info["professors"] = parse_professors(tr.find("tbody"))
             universities.append(university_info)
+
+    driver.quit()
 
     return universities
 
@@ -133,6 +135,9 @@ def parse_arguments():
     parser.add_argument(
         "--end_year", type=int, default=time.localtime().tm_year, help="End year (default 2024)"
     )
+    parser.add_argument(
+        "--country", type=str, required=True, help="Country"
+    )
 
     args = parser.parse_args()
 
@@ -146,14 +151,15 @@ def parse_arguments():
         args.fields.replace(" ", "").replace(",", "&"),
         args.start_year,
         args.end_year,
+        args.country
     )
 
 
 if __name__ == "__main__":
     print_field_choices()
-    fields, from_year, to_year = parse_arguments()
+    fields, from_year, to_year, country = parse_arguments()
 
-    url = f"https://csrankings.org/#/fromyear/{from_year}/toyear/{to_year}/index?{fields}&world"
+    url = f"https://csrankings.org/#/fromyear/{from_year}/toyear/{to_year}/index?{fields}&{country}"
     print(f"Your URL: {url}")
 
     universities = fetch_universities(url)
