@@ -12,7 +12,7 @@ SLEEP_TIME = 1
 """
 Default maximum output count, i.e., the number of output professors relevant to you. The higher the number, the more time it takes to search.
 """
-DEFAULT_MAX_COUNT = 50
+DEFAULT_MAX_COUNT = 10000
 
 """
 Default maximum search count.

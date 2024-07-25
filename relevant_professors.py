@@ -2,6 +2,7 @@ import time
 import argparse
 from bs4 import BeautifulSoup
 from selenium import webdriver
+import pandas as pd
 
 from utils import *
 from config import *
@@ -62,21 +63,16 @@ def check_relevant_professors_in_scholar(items=[], keywords=[], max_count=DEFAUL
 
         relevant_professor.update(
             {
-                "recent_highlights_num": len(prof_recent_highlights),
-                "recent_highlights": "[" + ", ".join(prof_recent_highlights) + "]",
-                "relevance": prof_relevance,
+                "recent_highlights":  "|".join(prof_recent_highlights),
             }
         )
 
         # Add this professor if he/she has recent highlights or relevance
-        if (
-            relevant_professor["recent_highlights_num"] > 0
-            or relevant_professor["relevance"] > 0
-        ):
-            relevant_professors.append(relevant_professor)
-            count += 1
-            if count >= max_count:
-                return relevant_professors
+
+        relevant_professors.append(relevant_professor)
+        count += 1
+        if count >= max_count:
+            return relevant_professors
 
         # Check maximum search count
         search_count += 1
@@ -159,11 +155,11 @@ if __name__ == "__main__":
     )
     print("Finish obtaining Google Scholar Info...")
 
-    # Sort according to the number of recent highlights
-    relevant_profs_sorted = sorted(
-        relevant_profs, key=lambda x: x["recent_highlights_num"], reverse=True
-    )
 
     save_filename = "relevant-profs.csv"
-    save_relevant_professors_to_csv(save_filename, relevant_profs_sorted)
+    df = pd.DataFrame(relevant_profs)
+    df['recent_highlights'] = df['recent_highlights'].str.split('|')
+    df = df.explode('recent_highlights')
+    df.to_csv(save_filename, index=False)
+    #save_relevant_professors_to_csv(save_filename, relevant_profs_sorted)
     print(f"Relevant professors' information has been saved to {save_filename}")
